@@ -9,11 +9,11 @@ do
     [ ! -f "${img}" ] && magick "${img}" -auto-orient -resize x"${min_h}" "${img%.*}_resized.png"
 done
 
-#identify -format "%h\n" image4.jpg image5.jpg image6.jpeg
-#magick image4.jpg -auto-orient -resize x1386 image4_resized.png
-#magick image5.jpg -auto-orient -resize x1386 image5_resized.png
-#magick image6.jpeg -auto-orient -resize x1386 image6_resized.png
-#magick image4_resized.png image5_resized.png image6_resized.png +append output2.png
+min_h=$(identify -format "%h\n" image4.jpg image5.jpg image6.jpeg | sort -n | head -1)
+for img in image4.jpg image5.jpg image6.jpeg
+do
+    [ ! -f "${img}" ] && magick "${img}" -auto-orient -resize x"${min_h}" "${img%.*}_resized.png"
+done
 
 #identify -format "%h\n" image7.jpg image8.jpeg image9.jpeg
 #magick image7.jpg -auto-orient -resize x591 image7_resized.png
@@ -37,4 +37,14 @@ done
 #PT=$(( W / 12 ))       # a bit smaller text
 #XOFF=$(( W / 20 ))     # 5% of width from the left
 #YOFF=$(( H / 15 ))     # ~6.7% down from the top
-magick output_merged.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasStar-dJnR.ttf" -pointsize 180 -annotate +310+150  "Happy Holidays" output_merged_msg.png
+[ ! -f output_merged_msg.png ] && magick output_merged.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasStar-dJnR.ttf" -pointsize 230 -annotate +150+180  "Happy Holidays" output_merged_msg.png
+
+# Add border
+#[ ! -f output_merged_msg_bdr1.png ] && 
+magick output_merged_msg.png -bordercolor red -border 20 output_merged_msg_bdr1.png
+#[ ! -f output_merged_msg_bdr2.png ] && 
+magick output_merged_msg.png -bordercolor green -border 20 output_merged_msg_bdr2.png
+#[ ! -f output_merged_msg_bdr3.png ] && 
+magick output_merged_msg.png -bordercolor red -border 20 -bordercolor green -border 10 output_merged_msg_bdr3.png
+#[ ! -f output_merged_msg_bdr4.png ] && 
+magick output_merged_msg.png -bordercolor green -border 20 -bordercolor red -border 10 output_merged_msg_bdr4.png
