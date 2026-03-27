@@ -37,14 +37,9 @@ done
 #PT=$(( W / 12 ))       # a bit smaller text
 #XOFF=$(( W / 20 ))     # 5% of width from the left
 #YOFF=$(( H / 15 ))     # ~6.7% down from the top
-[ ! -f output_merged_msg.png ] && magick output_merged.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasStar-dJnR.ttf" -pointsize 230 -annotate +150+180  "Happy Holidays" output_merged_msg.png
+#[ ! -f output_merged_msg.png ] && 
+magick output_merged.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasStar-dJnR.ttf" -pointsize 230 -annotate +150+200  "Happy Holidays" output_merged_msg.png
 
 # Add border
-#[ ! -f output_merged_msg_bdr1.png ] && 
-magick output_merged_msg.png -bordercolor red -border 20 output_merged_msg_bdr1.png
-#[ ! -f output_merged_msg_bdr2.png ] && 
-magick output_merged_msg.png -bordercolor green -border 20 output_merged_msg_bdr2.png
-#[ ! -f output_merged_msg_bdr3.png ] && 
-magick output_merged_msg.png -bordercolor red -border 20 -bordercolor green -border 10 output_merged_msg_bdr3.png
-#[ ! -f output_merged_msg_bdr4.png ] && 
-magick output_merged_msg.png -bordercolor green -border 20 -bordercolor red -border 10 output_merged_msg_bdr4.png
+#[ ! -f output_merged_msg_bdr.png ] && 
+magick output_merged_msg.png -bordercolor green -border 20 -bordercolor red -border 10 output_merged_msg_bdr.png
