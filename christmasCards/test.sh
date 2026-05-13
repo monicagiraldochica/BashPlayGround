@@ -61,16 +61,16 @@ main(){
         exit 1
     fi
 
-    args=("$@")
-    n=${#args[@]}
-
     # Merge inputs horizontally in groups of 3
+    args=("$@")
     i=1
+    n=${#args[@]}
     horizontals=()
     for ((idx=0; idx<n; idx+=3)); do
+        echo $i
         output="horizontal${i}.png"
 
-        if $rewrite && [[ -f "$output" ]]; then
+        if ! $rewrite && [ -f "${output}" ]; then
             echo "Skipping existing ${output}"
         else
             merge_horizontal "${args[idx]}" "${args[idx+1]}" "${args[idx+2]}" "${output}"
@@ -82,20 +82,33 @@ main(){
 
     # Merge horizontal images vertically, in groups of 3
     j=1
+    n=${#horizontals[@]}
     for ((idx=0; idx<n; idx+=3)); do
         output="vertical${j}.png"
 
-        if $rewrite && [[ -f "$output" ]]; then
+        if ! $rewrite && [ -f "${output}" ]; then
             echo "Skipping existing ${output}"
         else
             merge_vertical "${horizontals[idx]}" "${horizontals[idx+1]}" "${horizontals[idx+2]}" "${output}"
         fi
-    done    
+
+        ((j++))
+    done
+
+    #40% Transparency. factor = 1-(transparency%/100)
+    #magick vertical1.png -alpha Set -channel A -evaluate Multiply 0.3 +channel tmp1.png
+
+    #magick tmp1.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasStar-dJnR.ttf" -pointsize 270 -annotate +40+650  "Happy Holidays" tmp2.png
+    #magick  tmp2.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "Georgia" -pointsize 200 -annotate +455+1220  "2026" tmp3.png
+    #magick  tmp3.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasFlake-mJY9.ttf" -pointsize 230 -annotate +150+850  "01234\n56789" tmp4.png
+
+    #magick tmp4.png fixed.png -gravity southwest -geometry -210-152 -composite tmp6.png
+
+    magick tmp6.png fixed2.png -gravity northeast -geometry +240+0 -composite tmp7.png
+
+    magick tmp7.png fixed2.png -gravity northwest -geometry +240+0 -composite tmp8.png
 }
 main "$@"
-
-#40% Transparency. factor = 1-(transparency%/100)
-#magick output_merged.png -alpha Set -channel A -evaluate Multiply 0.3 +channel output_transp.png
 
 # Add message on top
 #IW=$(magick identify -format "%w" "output_merged.png")
@@ -104,21 +117,13 @@ main "$@"
 #PT=$(( W / 12 ))       # a bit smaller text
 #XOFF=$(( W / 20 ))     # 5% of width from the left
 #YOFF=$(( H / 15 ))     # ~6.7% down from the top
-##magick output_merged.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasStar-dJnR.ttf" -pointsize 270 -annotate +40+650  "Happy Holidays" output_merged_msg.png
-#magick  output_merged_msg.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "Georgia" -pointsize 200 -annotate +455+1220  "2026" output_merged_msg2.png
-#magick  output_merged_msg.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasFlake-mJY9.ttf" -pointsize 230 -annotate +150+850  "01234\n56789" output_merged_msg3.png
 
 # Add border
-#magick output_merged_msg2.png -bordercolor green -border 20 -bordercolor red -border 10 output_merged_msg2_bdr.png
 
 #img="merry-christmas-red-ornament-decorations/eee4ab84-36ac-4a2a-9a9b-734e12ac002c.jpg"
 #magick "${img}" -auto-orient -resize 600x600 ornament.png
 #magick ornament.png -fuzz 12% -transparent white fixed.png
-#magick output_merged_msg2_bdr.png fixed.png -gravity southwest -geometry -60-70 -composite output_merged_msg2_bdr_orn.png
-#magick output_merged_msg2.png fixed.png -gravity southwest -geometry -210-152 -composite output_merged_msg2_orn.png
 
 #img="orn2/orn2.jpg"
 #magick "${img}" -auto-orient -resize 400x400 ornament2.png
 #magick ornament2.png -fuzz 12% -transparent white fixed2.png
-#magick output_merged_msg2_orn.png fixed2.png -gravity northeast -geometry +240+0 -composite output_merged_msg2_orn_orn.png
-#magick output_merged_msg2_orn_orn.png fixed2.png -gravity northwest -geometry +240+0 -composite output_merged_msg2_orn_orn2.png
