@@ -47,6 +47,15 @@ merge_vertical(){
     magick "${resized[@]}" -append "${@: -1}"
 }
 
+add_transparency(){
+    img=$1
+    transparency=$2
+    [ ! -f "${img}" ] && echo "Image not found: ${img}" && return 1
+
+    factor=$(echo "1 - $transparency / 100" | bc -l)
+    magick "${img}" -alpha Set -channel A -evaluate Multiply "${factor}" +channel "${img%.*}_trp.png"
+}
+
 main(){
     # Detect flag
     rewrite=false
@@ -95,8 +104,8 @@ main(){
         ((j++))
     done
 
-    #40% Transparency. factor = 1-(transparency%/100)
-    #magick vertical1.png -alpha Set -channel A -evaluate Multiply 0.3 +channel tmp1.png
+    # Add transparency of 70%
+    add_transparency vertical1.png 40
 
     #magick tmp1.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasStar-dJnR.ttf" -pointsize 270 -annotate +40+650  "Happy Holidays" tmp2.png
     #magick  tmp2.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "Georgia" -pointsize 200 -annotate +455+1220  "2026" tmp3.png
@@ -104,9 +113,9 @@ main(){
 
     #magick tmp4.png fixed.png -gravity southwest -geometry -210-152 -composite tmp6.png
 
-    magick tmp6.png fixed2.png -gravity northeast -geometry +240+0 -composite tmp7.png
+    #magick tmp6.png fixed2.png -gravity northeast -geometry +240+0 -composite tmp7.png
 
-    magick tmp7.png fixed2.png -gravity northwest -geometry +240+0 -composite tmp8.png
+    #magick tmp7.png fixed2.png -gravity northwest -geometry +240+0 -composite tmp8.png
 }
 main "$@"
 
