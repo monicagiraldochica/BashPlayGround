@@ -92,6 +92,7 @@ main(){
     # Merge horizontal images vertically, in groups of 3
     j=1
     n=${#horizontals[@]}
+    verticals=()
     for ((idx=0; idx<n; idx+=3)); do
         output="vertical${j}.png"
 
@@ -102,32 +103,38 @@ main(){
         fi
 
         ((j++))
+        verticals+=("${output}")
     done
 
-    # Add transparency of 70%
-    add_transparency vertical1.png 40
+    # Add transparency of 60%
+    transparents=()
+    for v in "${verticals[@]}"; do
+        output="${v%.*}_trp.png"
+        [ ! -f "${output}" ] && add_transparency "${v}" 60
+        transparents+=("${output}")
+    done
 
+    # Add annotations
+    #+40 → horizontal offset (x) from the left edge
+    #+650 → vertical offset (y) from the top edge
     #magick tmp1.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasStar-dJnR.ttf" -pointsize 270 -annotate +40+650  "Happy Holidays" tmp2.png
     #magick  tmp2.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "Georgia" -pointsize 200 -annotate +455+1220  "2026" tmp3.png
     #magick  tmp3.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasFlake-mJY9.ttf" -pointsize 230 -annotate +150+850  "01234\n56789" tmp4.png
 
+    # Add ornaments
     #magick tmp4.png fixed.png -gravity southwest -geometry -210-152 -composite tmp6.png
-
     #magick tmp6.png fixed2.png -gravity northeast -geometry +240+0 -composite tmp7.png
-
     #magick tmp7.png fixed2.png -gravity northwest -geometry +240+0 -composite tmp8.png
 }
 main "$@"
+#./test.sh image?.*
 
 # Add message on top
-#IW=$(magick identify -format "%w" "output_merged.png")
-#W=$(magick identify -format "%w" "output_merged.png")
-#H=$(magick identify -format "%h" "output_merged.png")
+#W=$(magick identify -format "%w" "vertical1_trp.png") #1378
+#H=$(magick identify -format "%h" "vertical1_trp.png")
 #PT=$(( W / 12 ))       # a bit smaller text
-#XOFF=$(( W / 20 ))     # 5% of width from the left
+#XOFF=$(( W / 20 ))     # 5% of width from the left # 68
 #YOFF=$(( H / 15 ))     # ~6.7% down from the top
-
-# Add border
 
 #img="merry-christmas-red-ornament-decorations/eee4ab84-36ac-4a2a-9a9b-734e12ac002c.jpg"
 #magick "${img}" -auto-orient -resize 600x600 ornament.png
