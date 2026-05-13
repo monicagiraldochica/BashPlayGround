@@ -3,34 +3,96 @@
 # Created: 2026-03-12
 # Description: Create a christmas card
 
-#min_h=$(identify -format "%h\n" IMG_2806.jpeg image2.jpeg 214330677.jpg | sort -n | head -1)
-#for img in IMG_2806.jpeg image2.jpeg 214330677.jpg
-#do
-#    magick "${img}" -auto-orient -resize x"${min_h}" "${img%.*}_resized.png"
-#done
+merge_horizontal(){
+    inputs=("${@:1:$#-1}")
+    min_h=$(identify -format "%h\n" "${inputs[@]}" | sort -n | head -1)
+    resized=()
+    
+    for img in "${inputs[@]}"
+    do
+        if [[ -f "${img}" ]]; then
+            output="${img%.*}_resized.png"
+            magick "${img}" -auto-orient -resize x"${min_h}" "${output}"
+            resized+=("${output}")
+        fi
+    done
 
-#min_h=$(identify -format "%h\n" image4.jpg image5.jpg image6.jpeg | sort -n | head -1)
-#for img in image4.jpg image5.jpg image6.jpeg
-#do
-#    magick "${img}" -auto-orient -resize x"${min_h}" "${img%.*}_resized.png"
-#done
+    if (( ${#resized[@]} == 0 )); then
+        echo "Error: no valid input images" >&2
+        return 1
+    fi
 
-#magick IMG_2806_resized.png image2_resized.png 214330677_resized.png +append test.png
+    magick "${resized[@]}" +append "${@: -1}"
+}
 
-#identify -format "%h\n" image7.jpg image8.jpeg image9.jpeg
-#magick image7.jpg -auto-orient -resize x591 image7_resized.png
-#magick image8.jpeg -auto-orient -resize x591 image8_resized.png
-#magick image9.jpeg -auto-orient -resize x591 image9_resized.png
-#magick image7_resized.png image8_resized.png image9_resized.png +append output3.png
+merge_vertical(){
+    inputs=("${@:1:$#-1}")
+    min_w=$(identify -format "%w\n" "${inputs[@]}" | sort -n | head -1)
+    resized=()
+    
+    for img in "${inputs[@]}"
+    do
+        if [[ -f "${img}" ]]; then
+            output="${img%.*}_resized.png"
+            magick "${img}" -auto-orient -resize "${min_w}"x "${output}"
+            resized+=("${output}")
+        fi
+    done
 
-#identify -format "%w\n" output1.png output2.png output3.png
-#magick test.png -resize 1378x test_resized.png
-#magick output1.png -resize 1378x output1_resized.png
-#magick output2.png -resize 1378x output2_resized.png
-#magick output3.png -resize 1378x output3_resized.png
+    if (( ${#resized[@]} == 0 )); then
+        echo "Error: no valid input images" >&2
+        return 1
+    fi
 
-##magick test_resized.png output2_resized.png output3_resized.png -append output_merged.png
-#magick output1_resized.png output2_resized.png output3_resized.png -append output_merged.png
+    magick "${resized[@]}" -append "${@: -1}"
+}
+
+main(){
+    # Detect flag
+    rewrite=false
+    if [[ "${!#}" == "-rewrite" ]]; then
+        rewrite=true
+        set -- "${@:1:$#-1}"   # remove flag from arguments
+    fi
+
+    # Validate input count (must be multiple of 9)
+    if (( $# == 0 || $# % 9 != 0 )); then
+        echo "Error: number of input files must be a multiple of 9" >&2
+        exit 1
+    fi
+
+    args=("$@")
+    n=${#args[@]}
+
+    # Merge inputs horizontally in groups of 3
+    i=1
+    horizontals=()
+    for ((idx=0; idx<n; idx+=3)); do
+        output="horizontal${i}.png"
+
+        if $rewrite && [[ -f "$output" ]]; then
+            echo "Skipping existing ${output}"
+        else
+            merge_horizontal "${args[idx]}" "${args[idx+1]}" "${args[idx+2]}" "${output}"
+        fi
+
+        ((i++))
+        horizontals+=("${output}")
+    done
+
+    # Merge horizontal images vertically, in groups of 3
+    j=1
+    for ((idx=0; idx<n; idx+=3)); do
+        output="vertical${j}.png"
+
+        if $rewrite && [[ -f "$output" ]]; then
+            echo "Skipping existing ${output}"
+        else
+            merge_vertical "${horizontals[idx]}" "${horizontals[idx+1]}" "${horizontals[idx+2]}" "${output}"
+        fi
+    done    
+}
+main "$@"
 
 #40% Transparency. factor = 1-(transparency%/100)
 #magick output_merged.png -alpha Set -channel A -evaluate Multiply 0.3 +channel output_transp.png
@@ -43,7 +105,7 @@
 #XOFF=$(( W / 20 ))     # 5% of width from the left
 #YOFF=$(( H / 15 ))     # ~6.7% down from the top
 ##magick output_merged.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasStar-dJnR.ttf" -pointsize 270 -annotate +40+650  "Happy Holidays" output_merged_msg.png
-magick  output_merged_msg.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "Georgia" -pointsize 200 -annotate +455+1220  "2026" output_merged_msg2.png
+#magick  output_merged_msg.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "Georgia" -pointsize 200 -annotate +455+1220  "2026" output_merged_msg2.png
 #magick  output_merged_msg.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -font "MerryChristmasFlake-mJY9.ttf" -pointsize 230 -annotate +150+850  "01234\n56789" output_merged_msg3.png
 
 # Add border
@@ -53,10 +115,10 @@ magick  output_merged_msg.png -fill "#0a8f39" -stroke "#c40000" -strokewidth 2 -
 #magick "${img}" -auto-orient -resize 600x600 ornament.png
 #magick ornament.png -fuzz 12% -transparent white fixed.png
 #magick output_merged_msg2_bdr.png fixed.png -gravity southwest -geometry -60-70 -composite output_merged_msg2_bdr_orn.png
-magick output_merged_msg2.png fixed.png -gravity southwest -geometry -210-152 -composite output_merged_msg2_orn.png
+#magick output_merged_msg2.png fixed.png -gravity southwest -geometry -210-152 -composite output_merged_msg2_orn.png
 
-img="orn2/orn2.jpg"
-magick "${img}" -auto-orient -resize 400x400 ornament2.png
-magick ornament2.png -fuzz 12% -transparent white fixed2.png
-magick output_merged_msg2_orn.png fixed2.png -gravity northeast -geometry +240+0 -composite output_merged_msg2_orn_orn.png
-magick output_merged_msg2_orn_orn.png fixed2.png -gravity northwest -geometry +240+0 -composite output_merged_msg2_orn_orn2.png
+#img="orn2/orn2.jpg"
+#magick "${img}" -auto-orient -resize 400x400 ornament2.png
+#magick ornament2.png -fuzz 12% -transparent white fixed2.png
+#magick output_merged_msg2_orn.png fixed2.png -gravity northeast -geometry +240+0 -composite output_merged_msg2_orn_orn.png
+#magick output_merged_msg2_orn_orn.png fixed2.png -gravity northwest -geometry +240+0 -composite output_merged_msg2_orn_orn2.png
